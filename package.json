@@ -1,0 +1,21 @@
+{
+  "name": "unknown-poker",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "repository": "https://github.com/Gystre/unknown-poker.git",
+  "author": "Kyle Yu <gystre@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "jest": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.12.7",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
+  }
+}
