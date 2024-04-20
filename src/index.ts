@@ -99,10 +99,10 @@ export class TexasHoldem {
       );
     }
 
-    let results = this.run_simulations(
-      this.player.cards.map(this.cardToValue),
-      this.table.map(this.cardToValue),
-      this.opponents.map((player) => player.cards.map(this.cardToValue))
+    let results = this.runSimulation(
+      this.player.cards,
+      this.table,
+      this.opponents.map((player) => player.cards)
     );
 
     function frequencies(arr: any[]): { [key: string]: number } {
@@ -152,75 +152,10 @@ export class TexasHoldem {
     };
   }
 
-  // As -> 101
-  private cardToValue(card: string) {
-    const rank = card.slice(0, -1);
-    const suit = card.slice(-1);
-
-    let value = 0;
-    if (Number(rank)) {
-      value += Number(rank);
-    } else if (rank === "A") {
-      value += 1;
-    } else if (rank === "T") {
-      value += 10;
-    } else if (rank === "J") {
-      value += 11;
-    } else if (rank === "Q") {
-      value += 12;
-    } else if (rank === "K") {
-      value += 13;
-    }
-
-    if (suit === "h") {
-      value += 100;
-    } else if (suit === "s") {
-      value += 200;
-    } else if (suit === "d") {
-      value += 300;
-    } else if (suit === "c") {
-      value += 400;
-    }
-
-    return value;
-  }
-
-  private valueToCard(value: number) {
-    let card = "";
-    const rank = value % 100;
-    const suit = value - rank;
-
-    if (rank === 1) {
-      card += "A";
-    } else if (rank === 10) {
-      card += "T";
-    } else if (rank === 11) {
-      card += "J";
-    } else if (rank === 12) {
-      card += "Q";
-    } else if (rank === 13) {
-      card += "K";
-    } else {
-      card += rank;
-    }
-
-    if (suit === 100) {
-      card += "h";
-    } else if (suit === 200) {
-      card += "s";
-    } else if (suit === 300) {
-      card += "d";
-    } else if (suit === 400) {
-      card += "c";
-    }
-
-    return card;
-  }
-
-  private run_simulations(
-    master_yourcards: number[],
-    master_tablecards: number[],
-    master_opponentscards: Array<number[]>
+  private runSimulation(
+    master_yourcards: string[],
+    master_tablecards: string[],
+    master_opponentscards: Array<string[]>
   ) {
     // Set up counters
     let num_times_you_won = 0,
@@ -230,23 +165,13 @@ export class TexasHoldem {
     const opponenthandnames = [];
     const all_winners = [];
 
-    // Filter out 0s (empty cards)
-    master_yourcards = master_yourcards.filter((c) => c !== 0);
-    master_tablecards = master_tablecards.filter((c) => c !== 0);
-    master_opponentscards = master_opponentscards.map((arr) =>
-      arr.filter((c) => c !== 0)
-    );
-
     // monte carlo simulation
     for (let simnum = 0; simnum < this.numSimulations; simnum++) {
-      let stringDeck = this.deck.slice();
-      for (let i = stringDeck.length - 1; i > 0; i--) {
+      let deck = this.deck.slice();
+      for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [stringDeck[i], stringDeck[j]] = [stringDeck[j], stringDeck[i]];
+        [deck[i], deck[j]] = [deck[j], deck[i]];
       }
-
-      // convert to numbers
-      let deck = stringDeck.map(this.cardToValue);
 
       let yourcards = master_yourcards.slice();
       let tablecards = master_tablecards.slice();
@@ -254,37 +179,30 @@ export class TexasHoldem {
 
       // pad them with cards drawn
       while (yourcards.length < 2) {
-        yourcards.push(deck.pop() as number);
+        yourcards.push(deck.pop() as string);
       }
       while (tablecards.length < 5) {
-        tablecards.push(deck.pop() as number);
+        tablecards.push(deck.pop() as string);
       }
       for (let i = 0; i < this.numOpponents; i++) {
         while (opponentscards[i].length < 2) {
-          opponentscards[i].push(deck.pop() as number);
+          opponentscards[i].push(deck.pop() as string);
         }
       }
-
-      // convert them to strings
-      const yourcardsStr = yourcards.map(this.valueToCard);
-      const tablecardsStr = tablecards.map(this.valueToCard);
-      const opponentscardsStr = opponentscards.map((arr) =>
-        arr.map(this.valueToCard)
-      );
 
       // console.log("Your cards: " + yourcards);
       // console.log("Table's cards: " + tablecards);
       // console.log("Opponents' cards: " + opponentscards);
 
       let hands = [];
-      let yourhand = Hand.solve(yourcardsStr.concat(tablecardsStr));
+      let yourhand = Hand.solve(yourcards.concat(tablecards));
       yourhand.id = 0;
       hands.push(yourhand);
       yourhandnames.push(yourhand.name);
 
       // create the opponent's hands
       for (let i = 0; i < this.numOpponents; i++) {
-        let opphand = Hand.solve(opponentscardsStr[i].concat(tablecardsStr));
+        let opphand = Hand.solve(opponentscards[i].concat(tablecards));
         opphand.id = i + 1;
         hands.push(opphand);
         opponenthandnames.push(opphand.name);

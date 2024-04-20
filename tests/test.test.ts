@@ -7,8 +7,13 @@ test("test", async () => {
   table.addOpponent([], "bruh");
   table.addOpponent([]);
 
+  // start timer
+  const start = Date.now();
+
   const results = table.calculate();
-  console.log(results.yourHandChances);
-  console.log(results.yourHandChances);
-  console.log(results.winnerChances);
+
+  console.log("Time taken: ", Date.now() - start, "ms");
+
+  console.log(results.winChance, results.tieChance, results.loseChance);
+  // console.log(results.winnerChances);
 });
