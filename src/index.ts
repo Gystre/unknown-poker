@@ -7,29 +7,38 @@ export class TexasHoldem {
   private opponents: Player[] = [];
   private player: Player = new Player("You", []);
   private table: string[] = [];
+  private deadCards: number = 0; // the number of unknown dead cards
 
   // used to check for duplicates
   // prettier-ignore
-  private deck = ["As", "2s", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "Ts", "Js", "Qs", "Ks",
-                  "Ah", "2h", "3h", "4h", "5h", "6h", "7h", "8h", "9h", "Th", "Jh", "Qh", "Kh",
-                  "Ad", "2d", "3d", "4d", "5d", "6d", "7d", "8d", "9d", "Td", "Jd", "Qd", "Kd",
-                  "Ac", "2c", "3c", "4c", "5c", "6c", "7c", "8c", "9c", "Tc", "Jc", "Qc", "Kc"];
+  private deck: { [key: string]: boolean } = {
+    "As": true, "Ah": true, "Ad": true, "Ac": true,
+    "2s": true, "2h": true, "2d": true, "2c": true,
+    "3s": true, "3h": true, "3d": true, "3c": true,
+    "4s": true, "4h": true, "4d": true, "4c": true,
+    "5s": true, "5h": true, "5d": true, "5c": true,
+    "6s": true, "6h": true, "6d": true, "6c": true,
+    "7s": true, "7h": true, "7d": true, "7c": true,
+    "8s": true, "8h": true, "8d": true, "8c": true,
+    "9s": true, "9h": true, "9d": true, "9c": true,
+    "Ts": true, "Th": true, "Td": true, "Tc": true,
+    "Js": true, "Jh": true, "Jd": true, "Jc": true,
+    "Qs": true, "Qh": true, "Qd": true, "Qc": true,
+    "Ks": true, "Kh": true, "Kd": true, "Kc": true
+   };
 
   constructor(numSimulations?: number) {
     this.numSimulations = numSimulations || 10000;
   }
 
-  // check for duplicates by removing the card from the deck
-  private isDuplicate(card: string) {
-    for (let i = 0; i < this.deck.length; i++) {
-      if (this.deck[i] === card) {
-        this.deck.splice(i, 1);
-        return false;
-      }
+  // couldn't remove the card return false as there is a duplicate
+  private removeCard(card: string) {
+    if (this.deck[card]) {
+      this.deck[card] = false;
+      return true;
     }
 
-    // went through the deck and didn't find anything
-    return true;
+    return false;
   }
 
   setPlayer(cards: string[], name?: string) {
@@ -43,7 +52,7 @@ export class TexasHoldem {
 
     // check for duplicates
     for (let i = 0; i < cards.length; i++) {
-      if (this.isDuplicate(cards[i])) {
+      if (!this.removeCard(cards[i])) {
         throw new Error(`You: [${cards}], has a duplicate card: ${cards[i]}`);
       }
     }
@@ -51,7 +60,18 @@ export class TexasHoldem {
     this.player = new Player(name || "You", cards);
   }
 
-  addOpponent(cards: string[], name?: string) {
+  addOpponent(
+    cards: string[],
+    options?: {
+      name?: string;
+      folded?: boolean;
+    }
+  ) {
+    if (this.numOpponents >= 9) {
+      throw new Error("You can only have 9 opponents");
+    }
+
+    let name = options?.name;
     if (!name) {
       name = "Opponent " + (this.numOpponents + 1);
     }
@@ -66,21 +86,26 @@ export class TexasHoldem {
 
     // check for duplicates
     for (let i = 0; i < cards.length; i++) {
-      if (this.isDuplicate(cards[i])) {
+      if (!this.removeCard(cards[i])) {
         throw new Error(
           `${name}: [${cards}], has a duplicate card: ${cards[i]}`
         );
       }
     }
 
-    const player = new Player(name, cards);
-    this.opponents.push(player);
-    this.numOpponents++;
+    // if they've folded, they aren't considered an opponent and their cards are dead
+    if (options?.folded && cards.length == 0) {
+      this.deadCards += 2;
+    } else {
+      const player = new Player(name, cards);
+      this.opponents.push(player);
+      this.numOpponents++;
+    }
   }
 
   setTable(cards: string[]) {
     for (let i = 0; i < cards.length; i++) {
-      if (this.isDuplicate(cards[i])) {
+      if (!this.removeCard(cards[i])) {
         throw new Error(`Table: [${cards}], has a duplicate card: ${cards[i]}`);
       }
     }
@@ -167,7 +192,28 @@ export class TexasHoldem {
 
     // monte carlo simulation
     for (let simnum = 0; simnum < this.numSimulations; simnum++) {
-      let deck = this.deck.slice();
+      // make a copy of the deck
+      let deckDict = { ...this.deck };
+
+      // choose random dead cards to kill
+      for (let i = 0; i < this.deadCards; i++) {
+        let keys = Object.keys(deckDict);
+
+        let randomKey = keys[Math.floor(Math.random() * keys.length)];
+        while (!deckDict[randomKey]) {
+          randomKey = keys[Math.floor(Math.random() * keys.length)];
+        }
+        deckDict[randomKey] = false;
+      }
+
+      let deck: string[] = [];
+      for (let key in deckDict) {
+        if (deckDict[key]) {
+          deck.push(key);
+        }
+      }
+
+      // shuffle
       for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -177,13 +223,12 @@ export class TexasHoldem {
       let tablecards = master_tablecards.slice();
       let opponentscards = master_opponentscards.map((arr) => arr.slice());
 
-      // pad them with cards drawn
-      while (yourcards.length < 2) {
-        yourcards.push(deck.pop() as string);
-      }
+      // fill the table
       while (tablecards.length < 5) {
         tablecards.push(deck.pop() as string);
       }
+
+      // give opponents their cards
       for (let i = 0; i < this.numOpponents; i++) {
         while (opponentscards[i].length < 2) {
           opponentscards[i].push(deck.pop() as string);
