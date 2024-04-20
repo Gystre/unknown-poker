@@ -1,8 +1,14 @@
 import { TexasHoldem } from "../src/index";
 
 test("test", async () => {
-  const table = new TexasHoldem();
-  table.addOpponent(["As", "Ks"]);
-  table.addOpponent(["5h", "Ts"]);
-  table.setTable(["5h"]);
+  for (let i = 0; i < 4; i++) {
+    const table = new TexasHoldem();
+    table.setPlayer(["Ah", "Kh"]);
+    table.addOpponent([]);
+    table.addOpponent([]);
+    table.addOpponent([]);
+
+    const results = table.calculate();
+    console.log(results);
+  }
 });

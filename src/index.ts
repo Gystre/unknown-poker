@@ -1,41 +1,28 @@
-import { Card } from "./Card";
 import { Player } from "./Player";
+import { Hand } from "./pokersolver.js";
 
 export class TexasHoldem {
   private numSimulations: number;
   private numOpponents: number = 0;
   private opponents: Player[] = [];
   private player: Player = new Player("You", []);
-  private table: Card[] = [];
+  private table: string[] = [];
 
   // used to check for duplicates
   // prettier-ignore
-  private deck = [
-	new Card("As"), new Card("2s"), new Card("3s"), new Card("4s"), new Card("5s"),
-	new Card("6s"), new Card("7s"), new Card("8s"), new Card("9s"), new Card("Ts"),
-	new Card("Js"), new Card("Qs"), new Card("Ks"),
-
-	new Card("Ah"), new Card("2h"), new Card("3h"), new Card("4h"), new Card("5h"),
-	new Card("6h"), new Card("7h"), new Card("8h"), new Card("9h"), new Card("Th"),
-	new Card("Jh"), new Card("Qh"), new Card("Kh"),
-
-	new Card("Ad"), new Card("2d"), new Card("3d"), new Card("4d"), new Card("5d"),
-	new Card("6d"), new Card("7d"), new Card("8d"), new Card("9d"), new Card("Td"),
-	new Card("Jd"), new Card("Qd"), new Card("Kd"),
-
-	new Card("Ac"), new Card("2c"), new Card("3c"), new Card("4c"), new Card("5c"),
-	new Card("6c"), new Card("7c"), new Card("8c"), new Card("9c"), new Card("Tc"),
-	new Card("Jc"), new Card("Qc"), new Card("Kc")
-  ];
+  private deck = ["As", "2s", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "Ts", "Js", "Qs", "Ks",
+                  "Ah", "2h", "3h", "4h", "5h", "6h", "7h", "8h", "9h", "Th", "Jh", "Qh", "Kh",
+                  "Ad", "2d", "3d", "4d", "5d", "6d", "7d", "8d", "9d", "Td", "Jd", "Qd", "Kd",
+                  "Ac", "2c", "3c", "4c", "5c", "6c", "7c", "8c", "9c", "Tc", "Jc", "Qc", "Kc"];
 
   constructor(numSimulations?: number) {
     this.numSimulations = numSimulations || 10000;
   }
 
   // check for duplicates by removing the card from the deck
-  private isDuplicate(card: Card) {
+  private isDuplicate(card: string) {
     for (let i = 0; i < this.deck.length; i++) {
-      if (this.deck[i].name === card.name) {
+      if (this.deck[i] === card) {
         this.deck.splice(i, 1);
         return false;
       }
@@ -54,16 +41,14 @@ export class TexasHoldem {
       throw new Error("You must have 2 cards");
     }
 
-    let convertedCards = cards.map((card) => new Card(card));
-
     // check for duplicates
     for (let i = 0; i < cards.length; i++) {
-      if (this.isDuplicate(convertedCards[i])) {
+      if (this.isDuplicate(cards[i])) {
         throw new Error(`You: [${cards}], has a duplicate card: ${cards[i]}`);
       }
     }
 
-    this.player = new Player(name || "You", convertedCards);
+    this.player = new Player(name || "You", cards);
   }
 
   addOpponent(cards: string[], name?: string) {
@@ -79,32 +64,28 @@ export class TexasHoldem {
       throw new Error(`${name} must have 2 cards`);
     }
 
-    const convertedCards = cards.map((card) => new Card(card));
-
     // check for duplicates
     for (let i = 0; i < cards.length; i++) {
-      cards[i];
-      if (this.isDuplicate(convertedCards[i])) {
+      if (this.isDuplicate(cards[i])) {
         throw new Error(
           `${name}: [${cards}], has a duplicate card: ${cards[i]}`
         );
       }
     }
 
-    const player = new Player(name, convertedCards);
+    const player = new Player(name, cards);
     this.opponents.push(player);
     this.numOpponents++;
   }
 
   setTable(cards: string[]) {
-    const convertedCards = cards.map((card) => new Card(card));
     for (let i = 0; i < cards.length; i++) {
-      if (this.isDuplicate(convertedCards[i])) {
+      if (this.isDuplicate(cards[i])) {
         throw new Error(`Table: [${cards}], has a duplicate card: ${cards[i]}`);
       }
     }
 
-    this.table = convertedCards;
+    this.table = cards;
   }
 
   calculate() {
@@ -117,106 +98,182 @@ export class TexasHoldem {
         "You have no opponents. Add an opponent with addOpponent()"
       );
     }
+
+    return this.run_simulations(
+      this.player.cards.map(this.cardToValue),
+      this.table.map(this.cardToValue),
+      this.opponents.map((player) => player.cards.map(this.cardToValue))
+    );
   }
 
-  //   private run_simulations(
-  //     master_yourcards: number[],
-  //     master_tablecards: number[],
-  //     master_opponentscards: Array<number[]>
-  //   ) {
-  //     const num_opponents = master_opponentscards.length;
+  // As -> 101
+  private cardToValue(card: string) {
+    const rank = card.slice(0, -1);
+    const suit = card.slice(-1);
 
-  //     // Set up counters
-  //     var num_times_you_won = 0,
-  //       num_times_you_tied = 0,
-  //       num_times_you_lost = 0;
-  //     const yourhandnames = [];
-  //     const opponenthandnames = [];
-  //     const all_winners = [];
+    let value = 0;
+    if (Number(rank)) {
+      value += Number(rank);
+    } else if (rank === "A") {
+      value += 1;
+    } else if (rank === "T") {
+      value += 10;
+    } else if (rank === "J") {
+      value += 11;
+    } else if (rank === "Q") {
+      value += 12;
+    } else if (rank === "K") {
+      value += 13;
+    }
 
-  //     // Filter out 0s (empty cards)
-  //     master_yourcards = master_yourcards.filter((c) => c !== 0);
-  //     master_tablecards = master_tablecards.filter((c) => c !== 0);
-  //     master_opponentscards = master_opponentscards.map((arr) =>
-  //       arr.filter((c) => c !== 0)
-  //     );
+    if (suit === "h") {
+      value += 100;
+    } else if (suit === "s") {
+      value += 200;
+    } else if (suit === "d") {
+      value += 300;
+    } else if (suit === "c") {
+      value += 400;
+    }
 
-  //     // create a copy of this.deck
-  //     // const master_deck = this.deck.slice();
+    return value;
+  }
 
-  //     // Do this many times:
-  //     for (var simnum = 0; simnum < this.numSimulations; simnum++) {
-  //       // copies for this simulation
-  //       var deck = master_deck.shuffled();
-  //       var yourcards = master_yourcards.slice();
-  //       var tablecards = master_tablecards.slice();
-  //       var opponentscards = master_opponentscards.map((arr) => arr.slice());
+  private valueToCard(value: number) {
+    let card = "";
+    const rank = value % 100;
+    const suit = value - rank;
 
-  //       // pad them with cards drawn
-  //       while (yourcards.length < 2) {
-  //         yourcards.push(deck.pop());
-  //       }
-  //       while (tablecards.length < 5) {
-  //         tablecards.push(deck.pop());
-  //       }
-  //       for (var i = 0; i < num_opponents; i++) {
-  //         while (opponentscards[i].length < 2) {
-  //           opponentscards[i].push(deck.pop());
-  //         }
-  //       }
+    if (rank === 1) {
+      card += "A";
+    } else if (rank === 10) {
+      card += "T";
+    } else if (rank === 11) {
+      card += "J";
+    } else if (rank === 12) {
+      card += "Q";
+    } else if (rank === 13) {
+      card += "K";
+    } else {
+      card += rank;
+    }
 
-  //       // convert them to strings
-  //       yourcards = yourcards.map(convert_card_number_to_text);
-  //       tablecards = tablecards.map(convert_card_number_to_text);
-  //       opponentscards = opponentscards.map((arr) =>
-  //         arr.map(convert_card_number_to_text)
-  //       );
+    if (suit === 100) {
+      card += "h";
+    } else if (suit === 200) {
+      card += "s";
+    } else if (suit === 300) {
+      card += "d";
+    } else if (suit === 400) {
+      card += "c";
+    }
 
-  //       // console.log("Your cards: " + yourcards)
-  //       // console.log("Table's cards: " + tablecards)
-  //       // console.log("Opponents' cards: " + opponentscards)
+    return card;
+  }
 
-  //       var hands = [];
-  //       var yourhand = Hand.solve(yourcards.concat(tablecards));
-  //       yourhand.id = 0;
-  //       hands.push(yourhand);
-  //       yourhandnames.push(yourhand.name);
-  //       for (var i = 0; i < num_opponents; i++) {
-  //         var opphand = Hand.solve(opponentscards[i].concat(tablecards));
-  //         opphand.id = i + 1;
-  //         hands.push(opphand);
-  //         opponenthandnames.push(opphand.name);
-  //       }
-  //       var winners = Hand.winners(hands).map((hand) => hand.id);
-  //       if (winners.length === 1) {
-  //         // only one winner
-  //         var winner = winners[0];
-  //         all_winners.push(winner);
-  //         if (winner === 0) {
-  //           // 0 is player
-  //           num_times_you_won++;
-  //         } else {
-  //           num_times_you_lost++;
-  //         }
-  //       } else {
-  //         // ties
-  //         if (winners.includes(0)) {
-  //           // 0 is player
-  //           num_times_you_tied++;
-  //         } else {
-  //           num_times_you_lost++;
-  //         }
-  //       }
-  //       // console.log("Winner: " + winners)
-  //     }
+  private run_simulations(
+    master_yourcards: number[],
+    master_tablecards: number[],
+    master_opponentscards: Array<number[]>
+  ) {
+    // Set up counters
+    let num_times_you_won = 0,
+      num_times_you_tied = 0,
+      num_times_you_lost = 0;
+    const yourhandnames = [];
+    const opponenthandnames = [];
+    const all_winners = [];
 
-  //     return {
-  //       won: num_times_you_won / this.numSimulations,
-  //       lost: num_times_you_lost / this.numSimulations,
-  //       tied: num_times_you_tied / this.numSimulations,
-  //       yourhandnames: yourhandnames,
-  //       oppshandnames: opponenthandnames,
-  //       winners: all_winners,
-  //     };
-  //   }
+    // Filter out 0s (empty cards)
+    master_yourcards = master_yourcards.filter((c) => c !== 0);
+    master_tablecards = master_tablecards.filter((c) => c !== 0);
+    master_opponentscards = master_opponentscards.map((arr) =>
+      arr.filter((c) => c !== 0)
+    );
+
+    // monte carlo simulation
+    for (let simnum = 0; simnum < this.numSimulations; simnum++) {
+      let stringDeck = this.deck.slice();
+      for (let i = stringDeck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [stringDeck[i], stringDeck[j]] = [stringDeck[j], stringDeck[i]];
+      }
+
+      // convert to numbers
+      let deck = stringDeck.map(this.cardToValue);
+
+      let yourcards = master_yourcards.slice();
+      let tablecards = master_tablecards.slice();
+      let opponentscards = master_opponentscards.map((arr) => arr.slice());
+
+      // pad them with cards drawn
+      while (yourcards.length < 2) {
+        yourcards.push(deck.pop() as number);
+      }
+      while (tablecards.length < 5) {
+        tablecards.push(deck.pop() as number);
+      }
+      for (let i = 0; i < this.numOpponents; i++) {
+        while (opponentscards[i].length < 2) {
+          opponentscards[i].push(deck.pop() as number);
+        }
+      }
+
+      // convert them to strings
+      const yourcardsStr = yourcards.map(this.valueToCard);
+      const tablecardsStr = tablecards.map(this.valueToCard);
+      const opponentscardsStr = opponentscards.map((arr) =>
+        arr.map(this.valueToCard)
+      );
+
+      // console.log("Your cards: " + yourcards);
+      // console.log("Table's cards: " + tablecards);
+      // console.log("Opponents' cards: " + opponentscards);
+
+      let hands = [];
+      let yourhand = Hand.solve(yourcardsStr.concat(tablecardsStr));
+      yourhand.id = 0;
+      hands.push(yourhand);
+      yourhandnames.push(yourhand.name);
+
+      // create the opponent's hands
+      for (let i = 0; i < this.numOpponents; i++) {
+        let opphand = Hand.solve(opponentscardsStr[i].concat(tablecardsStr));
+        opphand.id = i + 1;
+        hands.push(opphand);
+        opponenthandnames.push(opphand.name);
+      }
+
+      let winners = Hand.winners(hands).map((hand) => hand.id);
+      if (winners.length === 1) {
+        // only one winner
+        let winner = winners[0];
+        all_winners.push(winner);
+        if (winner === 0) {
+          // 0 is player
+          num_times_you_won++;
+        } else {
+          num_times_you_lost++;
+        }
+      } else {
+        // ties
+        if (winners.includes(0)) {
+          // 0 is player
+          num_times_you_tied++;
+        } else {
+          num_times_you_lost++;
+        }
+      }
+      // console.log("Winner: " + winners)
+    }
+
+    return {
+      won: num_times_you_won / this.numSimulations,
+      lost: num_times_you_lost / this.numSimulations,
+      tied: num_times_you_tied / this.numSimulations,
+      yourhandnames: yourhandnames,
+      oppshandnames: opponenthandnames,
+      winners: all_winners,
+    };
+  }
 }
