@@ -99,11 +99,57 @@ export class TexasHoldem {
       );
     }
 
-    return this.run_simulations(
+    let results = this.run_simulations(
       this.player.cards.map(this.cardToValue),
       this.table.map(this.cardToValue),
       this.opponents.map((player) => player.cards.map(this.cardToValue))
     );
+
+    function frequencies(arr: any[]): { [key: string]: number } {
+      const result: { [key: string]: number } = {};
+
+      return arr.reduce((acc, curr) => {
+        acc[curr] = (acc[curr] ?? 0) + 1;
+
+        if (acc[curr] >= 3) {
+          result[curr] = acc[curr];
+        }
+
+        return acc;
+      }, {} as { [key: string]: number });
+    }
+
+    let yourHandFrequencies = frequencies(results.yourhandnames);
+    for (let [key, value] of Object.entries(yourHandFrequencies)) {
+      yourHandFrequencies[key] = (value ?? 0) / this.numSimulations;
+    }
+
+    let oppHandFrequencies = frequencies(results.oppshandnames);
+    for (let [key, value] of Object.entries(oppHandFrequencies)) {
+      // every opponent has an equal chance of having these hands
+      oppHandFrequencies[key] =
+        (value ?? 0) / this.numSimulations / this.numOpponents;
+    }
+
+    let winnerFrequencies = frequencies(results.winners);
+    let winnerChances = {
+      [this.player.name]: (winnerFrequencies[0] ?? 0) / this.numSimulations,
+    };
+
+    for (let i = 0; i < this.numOpponents; i++) {
+      const value = winnerFrequencies[i + 1];
+      winnerChances[this.opponents[i].name] =
+        (value ?? 0) / this.numSimulations;
+    }
+
+    return {
+      winChance: results.won,
+      loseChance: results.lost,
+      tieChance: results.tied,
+      yourHandChances: yourHandFrequencies,
+      oppHandChances: oppHandFrequencies,
+      winnerChances,
+    };
   }
 
   // As -> 101
@@ -264,7 +310,7 @@ export class TexasHoldem {
           num_times_you_lost++;
         }
       }
-      // console.log("Winner: " + winners)
+      // console.log("Winner: " + winners);
     }
 
     return {

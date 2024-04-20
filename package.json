@@ -1,9 +1,16 @@
 {
   "name": "unknown-poker",
+  "description": "Poker odds calculator with support for unknown hands",
+  "keywords": [
+    "poker",
+    "poker-hand",
+    "holdem",
+    "poker-evaluator"
+  ],
   "version": "1.0.0",
   "main": "./dist/index.js",
-  "repository": "https://github.com/Gystre/unknown-poker.git",
-  "author": "Kyle Yu <gystre@gmail.com>",
+  "repository": "https://github.com/Gystre/unknown-poker",
+  "author": "Kyle Yu <kyleyu222@gmail.com>",
   "license": "MIT",
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
