@@ -192,7 +192,6 @@ export class TexasHoldem {
 
     // monte carlo simulation
     for (let simnum = 0; simnum < this.numSimulations; simnum++) {
-      // make a copy of the deck
       let deckDict = { ...this.deck };
 
       // choose random dead cards to kill
