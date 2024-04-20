@@ -12,7 +12,7 @@ import { TexasHoldem } from "unknown-poker";
 const table = new TexasHoldem();
 table.setPlayer(["Ah", "Kh"]); // must always set the player's hand
 table.addOpponent([]); // opponent hands can be empty or have cards in them
-table.addOpponent([]);
+table.addOpponent([], "bob"); // you can also give your opponents names to make the results easier to understand
 table.addOpponent([]);
 
 const results = table.calculate();
