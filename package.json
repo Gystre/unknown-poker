@@ -3,11 +3,16 @@
   "description": "Poker odds calculator with support for unknown hands",
   "keywords": [
     "poker",
-    "poker-hand",
-    "holdem",
-    "poker-evaluator"
+    "odds",
+    "odds calculator",
+    "texas hold'em",
+    "texas holdem",
+    "hand equity",
+    "equity",
+    "poker evaluator"
   ],
-  "version": "1.0.0",
+  "private": false,
+  "version": "1.0.3",
   "main": "./dist/index.js",
   "repository": "https://github.com/Gystre/unknown-poker",
   "author": "Kyle Yu <kyleyu222@gmail.com>",
