@@ -17,6 +17,8 @@ test("test", async () => {
   });
   table.addOpponent([]);
 
+  console.log(table);
+
   // start timer
   const start = Date.now();
 
@@ -33,5 +35,6 @@ test("test", async () => {
 
   console.log("Time taken: ", Date.now() - start, "ms");
 
-  console.log(results.winChance, results.tieChance, results.loseChance);
+  // console.log(results.winChance, results.tieChance, results.loseChance);
+  console.log(results.yourHandChances);
 });

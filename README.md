@@ -6,10 +6,16 @@ Poker odds calculator with support for unknown cards. Uses a modified monte carl
 
 ## Usage
 
-```
+```js
 import { TexasHoldem } from "unknown-poker";
 
 const table = new TexasHoldem();
+
+// optionally set the number of simulation cycles for the monte carlo algorithm
+// const table = new TexasHoldem(5000);
+
+// set the table's cards (can be empty or have cards in it)
+table.setTable([]);
 
 // must always set the player's hand
 table.setPlayer(["Ah", "Kh"]);
@@ -21,13 +27,14 @@ table.addOpponent([]);
 table.addOpponent(["2s", "4c"]);
 
 // mark opponents as having folded in the optional js object
+// this will mark the supplied cards as "dead"
 table.addOpponent([], {
-	folded: true,
+  folded: true,
 });
 
 // you can also add names to your opponents to make them easier to identify in the results
 table.addOpponent([], {
-	name: "bruh2",
+  name: "bruh2",
 });
 
 const results = table.calculate();

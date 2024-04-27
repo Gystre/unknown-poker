@@ -1,6 +1,20 @@
 import { Player } from "./Player";
 import { Hand } from "./pokersolver.js";
 
+export interface SimulationResults {
+  // ex. 0.1, 0.2, etc.
+  winChance: number;
+  loseChance: number;
+  tieChance: number;
+
+  //! ex. { "Royal Flush": 0.1, "Straight Flush": 0.2, etc. }
+  yourHandChances: { [key: string]: number };
+  oppHandChances: { [key: string]: number };
+
+  // ex. { "You": 0.1, "Opponent 1": 0.2, etc. }
+  winnerChances: { [key: string]: number };
+}
+
 export class TexasHoldem {
   private numSimulations: number;
   private numOpponents: number = 0;
@@ -113,7 +127,7 @@ export class TexasHoldem {
     this.table = cards;
   }
 
-  calculate() {
+  calculate(): SimulationResults {
     if (this.player.cards.length == 0) {
       throw new Error("You have no cards. Set your cards with setPlayer()");
     }
