@@ -7,20 +7,17 @@ test("test", async () => {
 
   const table = new TexasHoldem(10000);
   table.setPlayer(["Ah", "Kh"]);
-  table.addOpponent([], {
+  table.setTable(["As", "Ks", "Qs"]);
+  table.addOpponent(["Ac", "Ad"], {
     name: "bruh",
-    folded: true,
   });
-  table.addOpponent([], {
+  table.addOpponent(["2s", "2c"], {
     name: "bruh2",
-    folded: true,
   });
   table.addOpponent([]);
 
-  console.log(table);
-
   // start timer
-  const start = Date.now();
+  // const start = Date.now();
 
   // const title = "test";
   // v8Profiler.startProfiling(title, true);
@@ -33,8 +30,32 @@ test("test", async () => {
   //   profile.delete();
   // });
 
-  console.log("Time taken: ", Date.now() - start, "ms");
+  // console.log("Time taken: ", Date.now() - start, "ms");
 
-  // console.log(results.winChance, results.tieChance, results.loseChance);
-  console.log(results.yourHandChances);
+  // console.log(results.winnerChances);
+
+  // bruh and bruh2 are on my team, add our chances together and average them
+  const team = ["bruh", "bruh2"];
+  const totalHandChances = results.yourHandChances;
+
+  for (const player of team) {
+    const chances = results.namedOppHandChances[player];
+
+    // add up all the chances and initialize any keys that don't exist
+    for (const hand in chances) {
+      if (!totalHandChances[hand]) {
+        totalHandChances[hand] = chances[hand];
+      }
+      totalHandChances[hand] += chances[hand];
+    }
+  }
+
+  // average it out
+  for (const hand in totalHandChances) {
+    totalHandChances[hand] /= team.length;
+  }
+
+  console.log("your chances", results.yourHandChances);
+  console.log("everyone else's chances", results.namedOppHandChances);
+  console.log(totalHandChances);
 });

@@ -7,9 +7,12 @@ export interface SimulationResults {
   loseChance: number;
   tieChance: number;
 
-  //! ex. { "Royal Flush": 0.1, "Straight Flush": 0.2, etc. }
+  // ex. { "Royal Flush": 0.1, "Straight Flush": 0.2, etc. }
   yourHandChances: { [key: string]: number };
   oppHandChances: { [key: string]: number };
+
+  // ex. { "Opponent 1": { "Royal Flush": 0.1, "Straight Flush": 0.2, etc. }, etc. }
+  namedOppHandChances: { [key: string]: { [key: string]: number } };
 
   // ex. { "You": 0.1, "Opponent 1": 0.2, etc. }
   winnerChances: { [key: string]: number };
@@ -138,11 +141,7 @@ export class TexasHoldem {
       );
     }
 
-    let results = this.runSimulation(
-      this.player.cards,
-      this.table,
-      this.opponents.map((player) => player.cards)
-    );
+    let results = this.runSimulation(this.player.cards, this.table);
 
     function frequencies(arr: any[]): { [key: string]: number } {
       const result: { [key: string]: number } = {};
@@ -170,6 +169,25 @@ export class TexasHoldem {
         (value ?? 0) / this.numSimulations / this.numOpponents;
     }
 
+    let namedOppHandFrequencies: { [key: string]: { [key: string]: number } } =
+      {};
+    for (const player of this.opponents) {
+      namedOppHandFrequencies[player.name] = frequencies(
+        results.namedOppHandNames[player.name]
+      );
+    }
+
+    let namedOppHandChances: { [key: string]: { [key: string]: number } } = {};
+    for (const player of this.opponents) {
+      namedOppHandChances[player.name] = {};
+      for (let [key, value] of Object.entries(
+        namedOppHandFrequencies[player.name]
+      )) {
+        namedOppHandChances[player.name][key] =
+          (value ?? 0) / this.numSimulations;
+      }
+    }
+
     let winnerFrequencies = frequencies(results.winners);
     let winnerChances = {
       [this.player.name]: (winnerFrequencies[0] ?? 0) / this.numSimulations,
@@ -187,14 +205,14 @@ export class TexasHoldem {
       tieChance: results.tied,
       yourHandChances: yourHandFrequencies,
       oppHandChances: oppHandFrequencies,
+      namedOppHandChances,
       winnerChances,
     };
   }
 
   private runSimulation(
     master_yourcards: string[],
-    master_tablecards: string[],
-    master_opponentscards: Array<string[]>
+    master_tablecards: string[]
   ) {
     // Set up counters
     let num_times_you_won = 0,
@@ -204,14 +222,19 @@ export class TexasHoldem {
     const opponenthandnames = [];
     const all_winners = [];
 
+    // contains the every hand every player has ever had in the simulation, categorized by player name
+    let namedOppHandNames: { [key: string]: Array<string> } = {};
+    for (let i = 0; i < this.numOpponents; i++) {
+      namedOppHandNames[this.opponents[i].name] = [];
+    }
+
     // monte carlo simulation
     for (let simnum = 0; simnum < this.numSimulations; simnum++) {
       let deckDict = { ...this.deck };
 
       // choose random dead cards to kill
+      let keys = Object.keys(deckDict);
       for (let i = 0; i < this.deadCards; i++) {
-        let keys = Object.keys(deckDict);
-
         let randomKey = keys[Math.floor(Math.random() * keys.length)];
         while (!deckDict[randomKey]) {
           randomKey = keys[Math.floor(Math.random() * keys.length)];
@@ -234,7 +257,7 @@ export class TexasHoldem {
 
       let yourcards = master_yourcards.slice();
       let tablecards = master_tablecards.slice();
-      let opponentscards = master_opponentscards.map((arr) => arr.slice());
+      let opponentscards = this.opponents.map((arr) => arr.cards.slice());
 
       // fill the table
       while (tablecards.length < 5) {
@@ -259,10 +282,14 @@ export class TexasHoldem {
       yourhandnames.push(yourhand.name);
 
       // create the opponent's hands
-      for (let i = 0; i < this.numOpponents; i++) {
-        let opphand = Hand.solve(opponentscards[i].concat(tablecards));
+      for (let i = 0; i < this.opponents.length; i++) {
+        const player = this.opponents[i];
+        let opphand = Hand.solve(player.cards.concat(tablecards));
         opphand.id = i + 1;
         hands.push(opphand);
+
+        // push their hand to the appropriate array as well
+        namedOppHandNames[player.name].push(opphand.name);
         opponenthandnames.push(opphand.name);
       }
 
@@ -295,6 +322,7 @@ export class TexasHoldem {
       tied: num_times_you_tied / this.numSimulations,
       yourhandnames: yourhandnames,
       oppshandnames: opponenthandnames,
+      namedOppHandNames,
       winners: all_winners,
     };
   }
