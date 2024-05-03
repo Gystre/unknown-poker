@@ -5,11 +5,15 @@ import { TexasHoldem } from "../src/index";
 test("test", async () => {
   // v8Profiler.setGenerateType(1);
 
-  const table = new TexasHoldem(10000);
-  table.setPlayer(["4h", "6s"]);
-  table.setTable(["Ac", "6d", "Tc", "4c"]);
-  table.addOpponent(["Ah", "6c"], { name: "bruh" });
-  table.addOpponent(["2c", "5c"], { name: "bruh2" });
+  const table = new TexasHoldem();
+  table.setPlayer(["Kd", "6s"]);
+  table.setTable(["5d", "3h", "Kh", "4c", "8h"]);
+  table.addOpponent(["7c", "2c"], { name: "bruh" });
+  // table.addOpponent(["5c", "5s"], { name: "bruh2" });
+  table.addOpponent([]);
+  table.addOpponent([]);
+  table.addOpponent([]);
+  table.addOpponent([]);
   table.addOpponent([]);
   table.addOpponent([]);
   table.addOpponent([]);
@@ -21,7 +25,10 @@ test("test", async () => {
   // v8Profiler.startProfiling(title, true);
 
   const results = table.calculate();
-  console.log(results.winChance);
+  console.log(results.oppHandChances);
+  console.log(results.namedOppHandChances);
+
+  return;
 
   // const profile = v8Profiler.stopProfiling(title);
   // profile.export(function (error: any, result: any) {

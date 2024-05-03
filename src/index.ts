@@ -215,9 +215,9 @@ export class TexasHoldem {
     master_tablecards: string[]
   ) {
     // Set up counters
-    let num_times_you_won = 0,
-      num_times_you_tied = 0,
-      num_times_you_lost = 0;
+    let num_times_you_won = 0;
+    let num_times_you_tied = 0;
+    let num_times_you_lost = 0;
     const yourhandnames = [];
     const opponenthandnames = [];
     const all_winners = [];
@@ -249,26 +249,28 @@ export class TexasHoldem {
         }
       }
 
-      // shuffle
-      for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
-      }
-
       let yourcards = master_yourcards.slice();
       let tablecards = master_tablecards.slice();
-      let opponentscards = this.opponents.map((arr) => arr.cards.slice());
 
       // fill the table
       while (tablecards.length < 5) {
-        tablecards.push(deck.pop() as string);
+        const randomIndex = Math.floor(Math.random() * deck.length);
+        tablecards.push(deck[randomIndex]);
+        deck.splice(randomIndex, 1);
       }
 
-      // give opponents their cards
-      for (let i = 0; i < this.numOpponents; i++) {
-        while (opponentscards[i].length < 2) {
-          opponentscards[i].push(deck.pop() as string);
+      // make copies of the oppponents array and fill in their cards
+      let opponents: Player[] = [];
+      for (const opp of this.opponents) {
+        const copiedOpp = new Player(opp.name, opp.cards.slice());
+
+        while (copiedOpp.cards.length < 2) {
+          const randomIndex = Math.floor(Math.random() * deck.length);
+          copiedOpp.cards.push(deck[randomIndex]);
+          deck.splice(randomIndex, 1);
         }
+
+        opponents.push(copiedOpp);
       }
 
       // console.log("Your cards: " + yourcards);
@@ -282,14 +284,14 @@ export class TexasHoldem {
       yourhandnames.push(yourhand.name);
 
       // create the opponent's hands
-      for (let i = 0; i < this.opponents.length; i++) {
-        let opphand = Hand.solve(opponentscards[i].concat(tablecards));
+      for (let i = 0; i < opponents.length; i++) {
+        let opphand = Hand.solve(opponents[i].cards.concat(tablecards));
         opphand.id = i + 1;
         hands.push(opphand);
         opponenthandnames.push(opphand.name);
 
         // add their hand to the list of hands they've had
-        namedOppHandNames[this.opponents[i].name].push(opphand.name);
+        namedOppHandNames[opponents[i].name].push(opphand.name);
       }
 
       let winners = Hand.winners(hands).map((hand) => hand.id);
