@@ -6,14 +6,12 @@ test("test", async () => {
   // v8Profiler.setGenerateType(1);
 
   const table = new TexasHoldem(10000);
-  table.setPlayer(["Ah", "Kh"]);
-  table.setTable(["As", "Ks", "Qs"]);
-  table.addOpponent(["Ac", "Ad"], {
-    name: "bruh",
-  });
-  table.addOpponent(["2s", "2c"], {
-    name: "bruh2",
-  });
+  table.setPlayer(["4h", "6s"]);
+  table.setTable(["Ac", "6d", "Tc", "4c"]);
+  table.addOpponent(["Ah", "6c"], { name: "bruh" });
+  table.addOpponent(["2c", "5c"], { name: "bruh2" });
+  table.addOpponent([]);
+  table.addOpponent([]);
   table.addOpponent([]);
 
   // start timer
@@ -23,6 +21,7 @@ test("test", async () => {
   // v8Profiler.startProfiling(title, true);
 
   const results = table.calculate();
+  console.log(results.winChance);
 
   // const profile = v8Profiler.stopProfiling(title);
   // profile.export(function (error: any, result: any) {

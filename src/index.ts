@@ -222,7 +222,7 @@ export class TexasHoldem {
     const opponenthandnames = [];
     const all_winners = [];
 
-    // contains the every hand every player has ever had in the simulation, categorized by player name
+    // contains every hand every player has ever had in the simulation, categorized by player name
     let namedOppHandNames: { [key: string]: Array<string> } = {};
     for (let i = 0; i < this.numOpponents; i++) {
       namedOppHandNames[this.opponents[i].name] = [];
@@ -283,14 +283,13 @@ export class TexasHoldem {
 
       // create the opponent's hands
       for (let i = 0; i < this.opponents.length; i++) {
-        const player = this.opponents[i];
-        let opphand = Hand.solve(player.cards.concat(tablecards));
+        let opphand = Hand.solve(opponentscards[i].concat(tablecards));
         opphand.id = i + 1;
         hands.push(opphand);
-
-        // push their hand to the appropriate array as well
-        namedOppHandNames[player.name].push(opphand.name);
         opponenthandnames.push(opphand.name);
+
+        // add their hand to the list of hands they've had
+        namedOppHandNames[this.opponents[i].name].push(opphand.name);
       }
 
       let winners = Hand.winners(hands).map((hand) => hand.id);
