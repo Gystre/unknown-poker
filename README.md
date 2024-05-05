@@ -4,7 +4,7 @@
 
 Poker odds calculator with support for unknown cards. Uses a modified monte carlo simulation from omni calculator (https://www.omnicalculator.com/other/poker-odds) and poker-solver (https://github.com/goldfire/pokersolver/). Not the fastest thing in the world but it gets the job done.
 
-If you liked this package please considering giving the respository a star on github (https://github.com/Gystre/unknown-poker). It gives me a lot of motivation to keep updating this project :)
+If you liked this package please consider giving the respository a star on github (https://github.com/Gystre/unknown-poker). It gives me a lot of motivation to keep updating this project :)
 
 ## Usage
 
