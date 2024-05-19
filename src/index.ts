@@ -327,4 +327,22 @@ export class TexasHoldem {
       winners: all_winners,
     };
   }
+
+  // in order to use this, the board must be set first
+  solveHand(cards: string[]) {
+    const board = this.table.slice();
+
+    // check for duplicates
+    for (const card of board) {
+      if (cards.includes(card)) {
+        throw new Error(
+          `SolveHand: The board: [${board}], has a duplicate card: ${card}`
+        );
+      }
+    }
+
+    board.push(...cards);
+
+    return Hand.solve(board);
+  }
 }

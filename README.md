@@ -42,3 +42,9 @@ table.addOpponent([], {
 const results = table.calculate();
 console.log(results);
 ```
+
+## Changelog
+
+### 1.3.0
+
+- exposed internal function `solveHand()` from pokersolver.js
